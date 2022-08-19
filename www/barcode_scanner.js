@@ -4,8 +4,8 @@
  const monaca = function () {};
 const BarcodeScanner = function () {};
 
-BarcodeScanner.prototype.scan = function(success, fail) {
-  cordova.exec(success, fail, "MonacaBarcodeScannerPlugin", "scan", []);
+BarcodeScanner.prototype.scan = function(success, fail, config) {
+  cordova.exec(success, fail, "MonacaBarcodeScannerPlugin", "scan", [config]);
 };
 
 monaca.BarcodeScanner = new BarcodeScanner();

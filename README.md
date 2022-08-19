@@ -7,6 +7,17 @@ Barcode scanner Monaca Plugin.
 This plugin provides a scanning barcode feature.
 Detect barcode or QR Code[^1] by device's camera and returns extracted strings.
 
+### Scanning mode
+
+- `Normal` mode
+  The detected code is displayed on screen and selected by tapping(clicking).
+- `One Shot` mode
+  The first detected code is selected and screen closed automatically.
+
+### Detection timeout message
+
+A Specified message can be displayed if no code is detected for a certain period.
+
 ## Supported Platforms
 
 ### Build Environments
@@ -29,12 +40,13 @@ Detect barcode or QR Code[^1] by device's camera and returns extracted strings.
 ## API Reference
 
 ```
-monaca.BarcodeScanner.scan(successCallback, failCallback)
+monaca.BarcodeScanner.scan(successCallback, failCallback[, options])
 ```
 
 - Calling `scan ()` will transition to the scanner screen.
-- When the barcode is detected, the extracted character string is displayed below the frame.
+- When the barcode is detected, the extracted character string is displayed below the frame.(`Normal mode`)
 - Tap the string to return to the original screen and the string and barcode type will be returned to `successCallback`.
+- In the case of `One Shot` mode, the first detected code is returned and screen is closed automatically.
 - When returned to the original screen without selecting the string, the detection will be cancelled.
 In order to return to the original screen, click the "Close" (X on the screen) button for iOS and the "Back" button for Android.
 
@@ -63,6 +75,26 @@ error: error message(string)
 |---|---|
 |"permission denied"|camera permission is not granted.|
 
+### options
+
+```
+{
+  "oneShot" : true,
+  "timeoutPrompt" : {
+    "show" : true,
+    "timeout" : 5,
+    "prompt" : "Not detected"
+  }
+}
+```
+
+|parameter|type|default value|description|
+|---|---|---|---|
+|oneShot|boolean|false|Enable or disable One Shot mode.|
+|timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
+|timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
+|timeoutPrompt.message|string|"Barcode not detected"|Timeout message.|
+
 ## Example
 
 ```javascript
@@ -77,6 +109,13 @@ error: error message(string)
   }, (error) => {
     // permission error
     const error_message = error;
+  }, {
+    "oneShot" : true,
+    "timeoutPrompt" : {
+      "show" : true,
+      "timeout" : 5,
+      "prompt" : "Not detected"
+    }
   });
 ```
 

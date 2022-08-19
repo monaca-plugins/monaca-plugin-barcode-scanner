@@ -31,6 +31,7 @@ public class BarcodeScanner extends CordovaPlugin {
     protected final static String[] permissions = {Manifest.permission.CAMERA};
     public static final String PERMISSION_DENIED_ERROR = "permission denied";
     public static final String UNKNOWN_ERROR = "unknown error";
+    private JSONObject options;
 
     public CallbackContext callbackContext;
 
@@ -42,6 +43,13 @@ public class BarcodeScanner extends CordovaPlugin {
         this.callbackContext = callbackContext;
         if ("scan".equals(action)) {
             // plugin scan action
+            try {
+                if (args.length() > 0) {
+                    options = args.getJSONObject(0);
+                }
+            } catch (JSONException e) {
+                options = null;
+            }
             callScanner();
         } else {
             return false;
@@ -71,7 +79,41 @@ public class BarcodeScanner extends CordovaPlugin {
      */
     private void showScanner() {
         Intent intent = new Intent(this.cordova.getActivity(), BarcodeScannerActivity.class);
+        if (options != null) {
+            setIntentExtras(options, intent, "");
+        }
         this.cordova.startActivityForResult((CordovaPlugin) this, intent, REQUEST_CODE_SCANNER);
+    }
+
+    /**
+     * Set option parameters to intent extras
+     */
+    private void setIntentExtras(JSONObject jsonObj, Intent intent, String keyPrefix) {
+        if (jsonObj == null) {
+            return;
+        }
+        JSONArray names = jsonObj.names();
+        if (names == null) {
+            return;
+        }
+        for (int i = 0; i < names.length(); i ++) {
+            try {
+                String key = names.getString(i);
+                String extraKey = keyPrefix + key;
+                Object value = jsonObj.get(key);
+                if (value instanceof Boolean) {
+                    intent.putExtra(extraKey, (Boolean) value);
+                } else if (value instanceof Number) {
+                    intent.putExtra(extraKey, ((Number) value).intValue());
+                } else if (value instanceof String) {
+                    intent.putExtra(extraKey, (String) value);
+                } else if (value instanceof JSONObject) {
+                    setIntentExtras((JSONObject) value, intent, extraKey + ".");
+                }
+            } catch (JSONException e) {
+                continue;
+            }
+        }
     }
 
     /**

@@ -25,11 +25,13 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.GradientDrawable;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
@@ -52,6 +54,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private Button detectedTextButton;
     private ImageView detectionArea;
     private Barcode detectedBarcode;
+    private TextView timeoutPromptView;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     public static final String INTENT_DETECTED_TEXT = "detectedText";
@@ -65,6 +68,17 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private final int DETECTED_TEXT_COLOR = 0xffffffff;
     private final int DETECTED_TEXT_MAX_LENGTH = 40;
 
+    private final int TIMEOUT_PROMPT_BACKGROUND_COLOR = 0xb4404040;
+    private final int TIMEOUT_PROMPT_BACKGROUND_CORNER_RADIUS = 20;
+
+    private boolean oneShot = false;
+    private boolean showTimeoutPrompt;
+    private int timeoutPromptSpan;
+    private String timeoutPrompt = "Barcode not detected";
+
+    private Handler timeoutPromptHandler;
+    private Runnable timeoutPromptRunnable;
+
     /**
      * ${inheritDoc}
      */
@@ -77,9 +91,21 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         int previewViewId = getResourceId(res, "preview_view", "id", packageName);
         int detectedTextButtonId = getResourceId(res, "detected_text", "id", packageName);
         int detectionAreaId = getResourceId(res, "detection_area", "id", packageName);
+        int timeoutPromptId = getResourceId(res, "timeout_prompt", "id", packageName);
 
+        Intent intent = getIntent();
+        oneShot = intent.getBooleanExtra("oneShot", false);
+        showTimeoutPrompt = intent.getBooleanExtra("timeoutPrompt.show", false);
+        timeoutPromptSpan = intent.getIntExtra("timeoutPrompt.timeout", -1);
+        String prompt = intent.getStringExtra("timeoutPrompt.prompt");
+        if (prompt != null && prompt.length() > 0) {
+            timeoutPrompt = prompt;
+        }
+
+        // create UI from resource
         setContentView(LayoutInflater.from(this).inflate(layoutId, null));
         previewView = findViewById(previewViewId);
+        // detected text
         detectedTextButton = findViewById(detectedTextButtonId);
         detectedTextButton.getBackground().setTint(DETECTED_TEXT_BACKGROUND_COLOR);
         detectedTextButton.setTextColor(DETECTED_TEXT_COLOR);
@@ -87,6 +113,14 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         detectionArea = findViewById(detectionAreaId);
         GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
         drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_COLOR);
+        // timeout prompt
+        timeoutPromptView = findViewById(timeoutPromptId);
+        GradientDrawable shape = new GradientDrawable();
+        shape.setCornerRadius(TIMEOUT_PROMPT_BACKGROUND_CORNER_RADIUS);
+        shape.setTint(TIMEOUT_PROMPT_BACKGROUND_COLOR);
+        timeoutPromptView.setBackground(shape);
+        timeoutPromptView.setText(timeoutPrompt);
+        timeoutPromptView.setVisibility(View.INVISIBLE);
 
         detectedTextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,6 +206,8 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             }
         };
         cameraProviderFuture.addListener(listenerRunnable, executor);
+
+        startDetectionTimer();
     }
 
     /**
@@ -211,14 +247,15 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             detectedBarcode = barcode;
 
             // UI
-            GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
-            drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_DETECTED_COLOR);
+            if (!oneShot) {
+                GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
+                drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_DETECTED_COLOR);
 
-            String detectedText = barcode.getRawValue();
-            detectedTextButton.setText(
-                    detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, detectedText.length())));
-            detectedTextButton.setVisibility(View.VISIBLE);
-
+                String detectedText = barcode.getRawValue();
+                detectedTextButton.setText(
+                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, detectedText.length())));
+                detectedTextButton.setVisibility(View.VISIBLE);
+            }
         }
         if (barcodes.size() == 0) {
             // no item is detected.
@@ -229,6 +266,13 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             detectedTextButton.setVisibility(View.INVISIBLE);
             GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
             drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_COLOR);
+        } else {
+            if (oneShot) {
+                setResult(Activity.RESULT_OK, getResultIntent());
+                finish();
+            }
+            // 検出タイムアウトタイマーを再起動
+            restartDetectionTimer();
         }
     }
 
@@ -294,6 +338,30 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                 imageProxy.close();
             }
         }
+    }
+
+    private boolean isEnableTimeoutPrompt() {
+        return showTimeoutPrompt && timeoutPromptSpan >= 0;
+    }
+
+    private void startDetectionTimer () {
+        if (!isEnableTimeoutPrompt()) {
+            return;
+        }
+        timeoutPromptHandler = new Handler();
+        timeoutPromptRunnable = () -> timeoutPromptView.setVisibility(View.VISIBLE);
+        timeoutPromptHandler.postDelayed(timeoutPromptRunnable, Math.max(timeoutPromptSpan * 1000, 400));
+    }
+
+    private void restartDetectionTimer () {
+        if (!isEnableTimeoutPrompt()) {
+            return;
+        }
+        if (timeoutPromptHandler != null) {
+            timeoutPromptHandler.removeCallbacks(timeoutPromptRunnable);
+        }
+        timeoutPromptView.setVisibility(View.INVISIBLE);
+        startDetectionTimer();
     }
 
     /**

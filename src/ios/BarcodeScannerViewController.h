@@ -30,6 +30,8 @@ extern NSString *const DELEGATE_DETECTED_FORMAT;
 /// バーコードスキャナー ViewController
 @interface BarcodeScannerViewController : UIViewController < UIAdaptivePresentationControllerDelegate>
 
+- (BarcodeScannerViewController*)initWithOptions:(NSDictionary *)options;
+
 /// delegate
 @property (weak, nonatomic) id <BarcodeScannerDelegate> delegate;
 

@@ -28,6 +28,16 @@ CGFloat const DETECTED_TEXT_MARGIN_LANDSCAPE = 10.0; // 検出枠との距離(La
 CGFloat const DETECTED_TEXT_FONT_SIZE = 12.0;
 CGFloat const DETECTED_TEXT_PADDING_VERT = 4.0;
 CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
+// 検出タイムアウトメッセージのデザイン
+CGFloat const DETECTED_TIMEOUT_RADIUS = 15.0;
+CGFloat const DETECTED_TIMEOUT_HEIGHT = 50.0;
+CGFloat const DETECTED_TIMEOUT_MARGIN_PORTRAIT = 20.0; // 検出枠との距離(Portrait時)
+CGFloat const DETECTED_TIMEOUT_MARGIN_LANDSCAPE = 10.0; // 検出枠との距離(Landscape時)
+CGFloat const DETECTED_TIMEOUT_FONT_SIZE = 16.0;
+CGFloat const DETECTED_TIMEOUT_PADDING_VERT = 4.0;
+CGFloat const DETECTED_TIMEOUT_PADDING_HORZ = 12.0;
+NSString *const DETECTED_TIMEOUT_PROMPT_DEFAULT = @"Barcode not detected";
+
 
 @implementation UIColor (Extensions)
 
@@ -51,6 +61,14 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
     return UIColor.scannerBlue;
 }
 
++ (UIColor *)detectTimeoutTextColor {
+    return UIColor.whiteColor;
+}
+
++ (UIColor *)detectTimeoutBgColor {
+    return [UIColor colorWithRed:0x40/255.0 green:0x40/255.0 blue:0x40/255.0 alpha:0.7 ];
+}
+
 @end
 
 /// バーコードスキャナー ViewController
@@ -64,6 +82,8 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
 @property (strong, nonatomic) UIView* detectionArea;
 /// 検出された文字列の画面表示
 @property (strong, nonatomic) UIButton* detectedStr;
+/// 検出タイムアウトメッセージ
+@property (strong, nonatomic) UILabel* timeoutPrompt;
 
 /// 検出された文字列
 @property NSString *detectedText;
@@ -76,6 +96,27 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
 @end
 
 @implementation BarcodeScannerViewController
+
+NSTimer* timeoutPromptTimer;
+/// option parameters
+BOOL oneShot;
+BOOL showTimeoutPrompt;
+int timeoutSeconds;
+NSString* timeoutPrompt;
+
+/// init
+- (BarcodeScannerViewController*)initWithOptions:(NSDictionary *)options {
+    self = [super init];
+    if(!self){
+        return self;
+    }
+    oneShot = [self isOneShot:options];
+    showTimeoutPrompt = [self doesShowTimeoutPrompt:options];
+    timeoutSeconds = [self timeoutValue:options];
+    timeoutPrompt = [self timeoutPromptText:options];
+
+    return self;
+}
 
 /// override
 - (void)viewDidLoad {
@@ -118,6 +159,8 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
 
     // キャプチャ停止
     [self.session stopRunning];
+    // タイマー停止
+    [timeoutPromptTimer invalidate];
     
     // 検出したバーコードの返却
     NSDictionary *detected = nil;
@@ -137,7 +180,9 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
 
     // キャプチャ停止
     [self.session stopRunning];
-    
+    // タイマー停止
+    [timeoutPromptTimer invalidate];
+
     // 検出キャンセル
     if (self.delegate) {
         [self.delegate didDismiss:nil];
@@ -260,6 +305,16 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
     self.detectedStr.layer.cornerRadius = DETECTED_TEXT_RADIUS;
     self.detectedStr.backgroundColor = [UIColor detectedTextBgColor];
     [self.detectedStr setHidden:YES];
+    
+    // 検出タイムアウト文字列
+    self.timeoutPrompt = [[UILabel alloc] init];
+    self.timeoutPrompt.textAlignment = NSTextAlignmentCenter;
+    self.timeoutPrompt.font = [UIFont systemFontOfSize:DETECTED_TIMEOUT_FONT_SIZE];
+    self.timeoutPrompt.textColor = [UIColor detectTimeoutTextColor];
+    self.timeoutPrompt.layer.cornerRadius = DETECTED_TIMEOUT_RADIUS;
+    self.timeoutPrompt.layer.backgroundColor = [UIColor detectTimeoutBgColor].CGColor;
+    self.timeoutPrompt.text = timeoutPrompt;
+    [self.timeoutPrompt setHidden:YES];
 
     // 位置を調整する
     [self layoutDetectionUI];
@@ -268,7 +323,13 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
     UITapGestureRecognizer *gesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(onTapDetectedStr)];
     self.detectedStr.userInteractionEnabled = YES;
     [self.detectedStr addGestureRecognizer:gesture];
+
+    // 文字列表示タイマー設定
+//    timeoutPromptTimer = [NSTimer scheduledTimerWithTimeInterval:[self timeoutValue] target:self selector:@selector(onDetectionTimeout:) userInfo:nil repeats:YES];
+    [self startDetectionTimer];
+    
     [self.view addSubview:self.detectedStr];
+    [self.view addSubview:self.timeoutPrompt];
 }
 
 /// 全てのUIパーツの位置を調整する
@@ -294,6 +355,10 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
     CGFloat margin = isLandscape ? DETECTED_TEXT_MARGIN_LANDSCAPE : DETECTED_TEXT_MARGIN_PORTRAIT;
     [self.detectedStr sizeToFit];
     self.detectedStr.frame = CGRectMake((self.view.frame.size.width - self.detectedStr.frame.size.width - DETECTED_TEXT_PADDING_HORZ * 2)/2, self.detectionAreaRect.origin.y + self.detectionAreaRect.size.height + margin, self.detectedStr.frame.size.width + DETECTED_TEXT_PADDING_HORZ * 2, DETECTED_TEXT_HEIGHT);
+    
+    // 検出タイムアウト文字列
+    [self.timeoutPrompt sizeToFit];
+    self.timeoutPrompt.frame = CGRectMake((self.view.frame.size.width - self.timeoutPrompt.frame.size.width - DETECTED_TIMEOUT_PADDING_HORZ * 2)/2, self.detectionAreaRect.origin.y + self.detectionAreaRect.size.height + margin, self.timeoutPrompt.frame.size.width + DETECTED_TIMEOUT_PADDING_HORZ * 2, DETECTED_TIMEOUT_HEIGHT);
 }
 
 /// 検出された文字列のタップ
@@ -310,6 +375,29 @@ CGFloat const DETECTED_TEXT_PADDING_HORZ = 12.0;
     self.detectedText = @"";
     self.detectedFormat = @"";
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+/// 検出タイムアウト文字列表示タイマーハンドラ
+/// @param timer タイマー
+- (void)onDetectionTimeout:(NSTimer *) timer {
+    [self.timeoutPrompt setHidden:NO];
+    [timer invalidate];
+}
+
+- (void)startDetectionTimer {
+    if (![self isEnableTimeoutPrompt]) {
+        return;
+    }
+    timeoutPromptTimer = [NSTimer scheduledTimerWithTimeInterval:MAX(timeoutSeconds, 0.4f) target:self selector:@selector(onDetectionTimeout:) userInfo:nil repeats:NO];
+}
+/// 検出タイムアウト文字列再表示
+- (void)restartDetectionTimer {
+    if (![self isEnableTimeoutPrompt]) {
+        return;
+    }
+    [timeoutPromptTimer invalidate];
+    [self.timeoutPrompt setHidden:YES];
+    [self startDetectionTimer];
 }
 
 #pragma mark - Scanner process
@@ -386,13 +474,20 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
             self.detectedText = barcodeDataStr;
             self.detectedFormat = [BarcodeScannerViewController getBarcodeFormatString:data.type];
 
-            // UIを更新
-            self.detectionArea.layer.borderColor = [UIColor detectedAreaDetectedColor].CGColor;
-            self.detectionArea.layer.borderWidth = DETECTION_AREA_BORDER;
-            [self.detectedStr setTitle:[barcodeDataStr substringToIndex:MIN(40, barcodeDataStr.length)] forState:UIControlStateNormal];
-            [self.detectedStr setHidden:NO];
-            [self layoutDetectionUI];
-            
+            if (oneShot) {
+                // one shotモード
+                // １つ目のバーコードが検出されたので処理を終了する
+                [self dismissViewControllerAnimated:YES completion:nil];
+            } else {
+                // UIを更新
+                self.detectionArea.layer.borderColor = [UIColor detectedAreaDetectedColor].CGColor;
+                self.detectionArea.layer.borderWidth = DETECTION_AREA_BORDER;
+                [self.detectedStr setTitle:[barcodeDataStr substringToIndex:MIN(40, barcodeDataStr.length)] forState:UIControlStateNormal];
+                [self.detectedStr setHidden:NO];
+                [self layoutDetectionUI];
+            }
+            // 検出タイムアウトタイマーを再起動
+            [self restartDetectionTimer];
         } else {
             LOGD(@"other type detected: %@", data.type);
         }
@@ -434,6 +529,81 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
     }
     
     return format;
+}
+
+#pragma mark - Options
+
+- (BOOL)isOneShot:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return NO;
+    }
+    id oneShot = options[@"oneShot"];
+    if ([self isBoolNumber:oneShot]) {
+        return [oneShot boolValue];
+    } else {
+        return NO;
+    }
+}
+
+- (BOOL)isEnableTimeoutPrompt {
+    return showTimeoutPrompt && timeoutSeconds >= 0;
+}
+
+- (BOOL)doesShowTimeoutPrompt:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return NO;
+    }
+    id showPrompt = [options valueForKeyPath:@"timeoutPrompt.show"];
+    if ([self isBoolNumber:showPrompt]) {
+        return [showPrompt boolValue];
+    } else {
+        return NO;
+    }
+}
+
+- (int)timeoutValue:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return -1;
+    }
+    NSNumber* timeout = [options valueForKeyPath:@"timeoutPrompt.timeout"];
+    if ([timeout isEqual:[NSNull null]] || ![self isNumber:timeout]) {
+        return -1;
+    }
+    return [timeout intValue];
+}
+
+- (NSString*)timeoutPromptText:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return DETECTED_TIMEOUT_PROMPT_DEFAULT;
+    }
+    id prompt = [options valueForKeyPath:@"timeoutPrompt.prompt"];
+    if (![prompt isKindOfClass:[NSString class]]) {
+        return DETECTED_TIMEOUT_PROMPT_DEFAULT;
+    }
+    if ([prompt length] > 0) {
+        return prompt;
+    } else {
+        return DETECTED_TIMEOUT_PROMPT_DEFAULT;
+    }
+}
+
+- (BOOL) isNumber:(NSNumber *)obj {
+    if (!obj || [obj isEqual:[NSNull null]] || ![obj isKindOfClass:[NSNumber class]]) {
+        return NO;
+    }
+    if ([self isBoolNumber:obj]) {
+        return NO;
+    }
+    return YES;
+}
+
+- (BOOL) isBoolNumber:(NSNumber *)obj {
+    if (!obj || [obj isEqual:[NSNull null]]) {
+        return NO;
+    }
+    CFTypeID boolID = CFBooleanGetTypeID();
+    CFTypeID numID = CFGetTypeID((__bridge CFTypeRef)(obj));
+    return numID == boolID;
 }
 
 @end

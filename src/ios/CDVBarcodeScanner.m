@@ -57,11 +57,18 @@ typedef NS_ENUM(NSInteger, ScannerPermission) {
 /// バーコードスキャナープラグイン barcode scanner plugin
 @implementation CDVBarcodeScanner
 
+NSDictionary* options;
+
 /// plugin action method
 /// @param command
 - (void)scan:(CDVInvokedUrlCommand*)command
 {
     self.callbackId = command.callbackId;
+    if (command.arguments.count == 0) {
+        options = [NSDictionary dictionary];
+    } else {
+        options = command.arguments[0];
+    }
     [self.commandDelegate runInBackground:^{
         // Perform UI operations on the main thread
         [self callScanner];
@@ -98,7 +105,7 @@ typedef NS_ENUM(NSInteger, ScannerPermission) {
 - (void) showScanner {
     dispatch_async(dispatch_get_main_queue(), ^{
         // スキャナー画面の作成
-        BarcodeScannerViewController *scanner = [[BarcodeScannerViewController alloc] init];
+        BarcodeScannerViewController *scanner = [[BarcodeScannerViewController alloc] initWithOptions:options];
         scanner.view.frame = self.viewController.view.frame;
         scanner.delegate = self;    // BarcodeScannerViewControllerからの通知を受け取る
 
