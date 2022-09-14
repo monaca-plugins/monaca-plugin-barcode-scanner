@@ -36,6 +36,7 @@ A Specified message can be displayed if no code is detected for a certain period
 - QR_CODE
 - EAN_8
 - EAN_13
+- ITF
 
 ## API Reference
 
