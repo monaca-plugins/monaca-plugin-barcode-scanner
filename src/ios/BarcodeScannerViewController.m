@@ -425,7 +425,8 @@ NSString* timeoutPrompt;
     // 読み取りたいバーコードの種類を指定
     [output setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
     [output setMetadataObjectTypes:@[AVMetadataObjectTypeQRCode, AVMetadataObjectTypeEAN13Code,
-        AVMetadataObjectTypeEAN8Code]];
+        AVMetadataObjectTypeEAN8Code,
+        AVMetadataObjectTypeITF14Code]];
     
     // 検出エリアの設定
     // 検出エリアの座標(絶対値)を計算
@@ -469,7 +470,8 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
         NSString *barcodeDataStr = [(AVMetadataMachineReadableCodeObject *)data stringValue];
         if ([data.type isEqualToString:AVMetadataObjectTypeQRCode]
             || [data.type isEqualToString:AVMetadataObjectTypeEAN13Code]
-            || [data.type isEqualToString:AVMetadataObjectTypeEAN8Code]) {
+            || [data.type isEqualToString:AVMetadataObjectTypeEAN8Code]
+            || [data.type isEqualToString:AVMetadataObjectTypeITF14Code]) {
 
             self.detectedText = barcodeDataStr;
             self.detectedFormat = [BarcodeScannerViewController getBarcodeFormatString:data.type];
@@ -526,6 +528,8 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
         format = @"EAN_8";
     } else if (type == AVMetadataObjectTypeEAN13Code) {
         format = @"EAN_13";
+    } else if (type == AVMetadataObjectTypeITF14Code) {
+        format = @"ITF";
     }
     
     return format;
