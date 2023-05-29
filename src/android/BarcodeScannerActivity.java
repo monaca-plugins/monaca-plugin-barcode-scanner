@@ -153,9 +153,10 @@ public class BarcodeScannerActivity extends AppCompatActivity {
      */
     private Intent getResultIntent() {
         Intent intent = new Intent();
-        if (detectedBarcode != null) {
-            intent.putExtra(INTENT_DETECTED_TEXT, detectedBarcode.getRawValue());
+        try {
+            intent.putExtra(INTENT_DETECTED_TEXT, detectedBarcode.getDisplayValue());
             intent.putExtra(INTENT_DETECTED_FORMAT, getBarcodeFormatString(detectedBarcode.getFormat()));
+        } catch (NullPointerException e) {
         }
 
         return intent;
@@ -246,21 +247,29 @@ public class BarcodeScannerActivity extends AppCompatActivity {
      * @param barcodes
      */
     private void onDetectionTaskSuccess(List<Barcode> barcodes) {
+        int detected = 0;
         for (Barcode barcode : barcodes) {
             detectedBarcode = barcode;
+            String detectedText = barcode.getDisplayValue();
+            if (detectedText == null) {
+                detectedBarcode = null;
+                continue;
+            }
+            detected ++;
 
             // UI
             if (!oneShot) {
                 GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
                 drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_DETECTED_COLOR);
 
-                String detectedText = barcode.getRawValue();
+                // calculate text width considering multi byte char
+                int index = getStrIndexFitsInWidth(detectedText, DETECTED_TEXT_MAX_LENGTH);
                 detectedTextButton.setText(
-                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, detectedText.length())));
+                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, index)));
                 detectedTextButton.setVisibility(View.VISIBLE);
             }
         }
-        if (barcodes.size() == 0) {
+        if (detected == 0) {
             // no item is detected.
             detectedBarcode = null;
 
@@ -366,6 +375,31 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         }
         timeoutPromptView.setVisibility(View.INVISIBLE);
         startDetectionTimer();
+    }
+
+    /**
+     * Get index of multi byte string that fits in specified width.
+     * @param str   target text
+     * @param widthMax  text size limitation. Size is calculated as 1(single byte char) or 2(multibyte char).
+     * @return int  index of character that fits in specified size.
+     */
+    public static int getStrIndexFitsInWidth(String str, int widthMax) {
+        int width = 0;
+
+        char[] c = str.toCharArray();
+        int index = 0;
+        for (index = 0; index < c.length; index ++) {
+            if (String.valueOf(c[index]).getBytes().length <= 1){
+                width += 1;  // single byte char
+            }else{
+                width += 2;  // multi byte char
+            }
+            if (width >= widthMax) {
+                break;
+            }
+        }
+
+        return index;
     }
 
     /**
