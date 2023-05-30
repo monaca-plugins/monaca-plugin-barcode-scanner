@@ -40,9 +40,12 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.io.BufferedReader;
 
 /**
  * Barcode scanner activity class
@@ -262,10 +265,10 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                 GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
                 drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_DETECTED_COLOR);
 
-                // calculate text width considering multi byte char
-                int index = getStrIndexFitsInWidth(detectedText, DETECTED_TEXT_MAX_LENGTH);
+                // If a line feed code is included, discard the second and subsequent lines.
+                String line = getFirstLine(detectedText);
                 detectedTextButton.setText(
-                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, index)));
+                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, line.length())));
                 detectedTextButton.setVisibility(View.VISIBLE);
             }
         }
@@ -376,30 +379,19 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         timeoutPromptView.setVisibility(View.INVISIBLE);
         startDetectionTimer();
     }
-
+    
     /**
-     * Get index of multi byte string that fits in specified width.
+     * Return first line of text.
      * @param str   target text
-     * @param widthMax  text size limitation. Size is calculated as 1(single byte char) or 2(multibyte char).
-     * @return int  index of character that fits in specified size.
+     * @return String  first line text
      */
-    public static int getStrIndexFitsInWidth(String str, int widthMax) {
-        int width = 0;
-
-        char[] c = str.toCharArray();
-        int index = 0;
-        for (index = 0; index < c.length; index ++) {
-            if (String.valueOf(c[index]).getBytes().length <= 1){
-                width += 1;  // single byte char
-            }else{
-                width += 2;  // multi byte char
-            }
-            if (width >= widthMax) {
-                break;
-            }
+    private static String getFirstLine(String str) {
+        String line = null;
+        try (BufferedReader reader = new BufferedReader(new StringReader(str))) {
+            line = reader.readLine();
+        } catch (IOException e) {
         }
-
-        return index;
+        return (line != null) ? line : "";
     }
 
     /**
