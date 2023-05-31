@@ -40,12 +40,9 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.io.BufferedReader;
 
 /**
  * Barcode scanner activity class
@@ -265,10 +262,8 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                 GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
                 drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_DETECTED_COLOR);
 
-                // If a line feed code is included, discard the second and subsequent lines.
-                String line = getFirstLine(detectedText);
                 detectedTextButton.setText(
-                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, line.length())));
+                        detectedText.substring(0, Math.min(DETECTED_TEXT_MAX_LENGTH, detectedText.length())));
                 detectedTextButton.setVisibility(View.VISIBLE);
             }
         }
@@ -378,20 +373,6 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         }
         timeoutPromptView.setVisibility(View.INVISIBLE);
         startDetectionTimer();
-    }
-    
-    /**
-     * Return first line of text.
-     * @param str   target text
-     * @return String  first line text
-     */
-    private static String getFirstLine(String str) {
-        String line = null;
-        try (BufferedReader reader = new BufferedReader(new StringReader(str))) {
-            line = reader.readLine();
-        } catch (IOException e) {
-        }
-        return (line != null) ? line : "";
     }
 
     /**
