@@ -333,9 +333,9 @@ public class BarcodeScannerActivity extends AppCompatActivity {
 
             if (mediaImage != null) {
                 // カメラ画像をトリミングして検出範囲を限定する
-                Bitmap bitmapOrg = ImageUtils.imageToToBitmap(mediaImage);
+                Bitmap bitmapOrg = BitmapUtils.getBitmap(imageProxy);
                 Bitmap bitmapTrimmed = ImageUtils.trim(bitmapOrg, trimWidth, trimHeight);
-                InputImage inputImage = InputImage.fromBitmap(bitmapTrimmed, rotationDegrees);
+                InputImage inputImage = InputImage.fromBitmap(bitmapTrimmed, 0);
                 // バーコード検出実行
                 scanner.process(inputImage)
                         .addOnSuccessListener(barcodes -> {

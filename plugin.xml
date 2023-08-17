@@ -35,6 +35,8 @@
     <source-file src="src/android/BarcodeScanner.java" target-dir="src/io/monaca/plugin/barcodescanner" />
     <source-file src="src/android/BarcodeScannerActivity.java" target-dir="src/io/monaca/plugin/barcodescanner" />
     <source-file src="src/android/ImageUtils.java" target-dir="src/io/monaca/plugin/barcodescanner" />
+    <source-file src="src/android/BitmapUtils.java" target-dir="src/io/monaca/plugin/barcodescanner" />
+    <source-file src="src/android/FrameMetadata.java" target-dir="src/io/monaca/plugin/barcodescanner" />
     <resource-file src="src/android/res/layout/activity_barcode_scanner.xml" target="res/layout/activity_barcode_scanner.xml" />
     <resource-file src="src/android/res/drawable/rectangle.xml" target="res/drawable/rectangle.xml" />
     <resource-file src="src/android/res/drawable/round_btn.xml" target="res/drawable/round_btn.xml" />
