@@ -55,6 +55,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private ImageView detectionArea;
     private Barcode detectedBarcode;
     private TextView timeoutPromptView;
+    private ImageView debugPreviewView;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     public static final String INTENT_DETECTED_TEXT = "detectedText";
@@ -75,6 +76,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private boolean showTimeoutPrompt;
     private int timeoutPromptSpan;
     private String timeoutPrompt = "Barcode not detected";
+    private int debugPreviewMode = 0;
 
     private Handler timeoutPromptHandler;
     private Runnable timeoutPromptRunnable;
@@ -92,6 +94,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         int detectedTextButtonId = getResourceId(res, "detected_text", "id", packageName);
         int detectionAreaId = getResourceId(res, "detection_area", "id", packageName);
         int timeoutPromptId = getResourceId(res, "timeout_prompt", "id", packageName);
+        int debugPreviewId = getResourceId(res, "debug_preview", "id", packageName);
 
         Intent intent = getIntent();
         oneShot = intent.getBooleanExtra("oneShot", false);
@@ -101,6 +104,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         if (prompt != null && prompt.length() > 0) {
             timeoutPrompt = prompt;
         }
+        debugPreviewMode = intent.getIntExtra("debug.preview", 0);
 
         // create UI from resource
         setContentView(LayoutInflater.from(this).inflate(layoutId, null));
@@ -121,6 +125,9 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         timeoutPromptView.setBackground(shape);
         timeoutPromptView.setText(timeoutPrompt);
         timeoutPromptView.setVisibility(View.INVISIBLE);
+        // for debug mode
+        debugPreviewView = findViewById(debugPreviewId);
+        debugPreviewView.setVisibility( debugPreviewMode == 0 ? View.INVISIBLE : View.VISIBLE);
 
         detectedTextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -335,6 +342,11 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                 // カメラ画像をトリミングして検出範囲を限定する
                 Bitmap bitmapOrg = BitmapUtils.getBitmap(imageProxy);
                 Bitmap bitmapTrimmed = ImageUtils.trim(bitmapOrg, trimWidth, trimHeight);
+                if (debugPreviewMode == 1) {
+                    debugPreviewView.setImageBitmap(bitmapTrimmed);
+                } else if (debugPreviewMode == 2) {
+                    debugPreviewView.setImageBitmap(bitmapOrg);
+                }
                 InputImage inputImage = InputImage.fromBitmap(bitmapTrimmed, 0);
                 // バーコード検出実行
                 scanner.process(inputImage)

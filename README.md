@@ -95,6 +95,7 @@ error: error message(string)
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
+|debug.preview|int|0|Displays camera preview bitmap(sent to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
 
 ## Example
 
@@ -116,6 +117,9 @@ error: error message(string)
       "show" : true,
       "timeout" : 5,
       "prompt" : "Not detected"
+    },
+    "debug" : {
+      "preview" : 1
     }
   });
 ```
