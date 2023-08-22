@@ -1,5 +1,10 @@
 # Release Notes
 
+## 1.3.0
+
+- Support AQUOS sense7
+  - Support devices that have strides different from image width in the camera plane buffer.
+
 ## 1.2.1
 
 - Support Multi-byte `JIS X 0208(Shift JIS)` text decoding.

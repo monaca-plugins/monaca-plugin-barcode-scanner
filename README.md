@@ -85,6 +85,9 @@ error: error message(string)
     "show" : true,
     "timeout" : 5,
     "prompt" : "Not detected"
+  },
+  "debug" : {
+    "preview" : 0
   }
 }
 ```
@@ -95,7 +98,7 @@ error: error message(string)
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
-|debug.preview|int|0|Displays camera preview bitmap(sent to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
+|debug.preview<br/>(android only)|int|0|Displays camera preview bitmap(before sending to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
 
 ## Example
 
@@ -117,9 +120,6 @@ error: error message(string)
       "show" : true,
       "timeout" : 5,
       "prompt" : "Not detected"
-    },
-    "debug" : {
-      "preview" : 1
     }
   });
 ```
@@ -145,6 +145,8 @@ To add these entries ito the `info.plist`, you can use the `<edit-config>` tag i
 
 ## Android Quirks
 
+### compileSDKVersion
+
 The library `androidx.camera:camera-view` used internally requires `compileSDKVersion>=31`.
 
 To specify the compileSdkVersion in Cordova, you should set `android-targetSdkVersion` by using the `<preference>` tag in the `config.xml` file like this:
@@ -152,6 +154,54 @@ To specify the compileSdkVersion in Cordova, you should set `android-targetSdkVe
 ```
 <preference name="android-targetSdkVersion" value="31" />
 ```
+
+### Barcode detection problem due to device model dependency
+
+This plugin detects barcodes by processing the image captured by the camera (ImageProxy) and passing it to the barcode detection library (MLKit).
+ImageProxy can store images in a variety of formats, and it depends on the device what format the camera captures.
+Some devices may fail to detect barcodes because they are captured in a format not supported by the plugin.
+
+#### Supported format
+
+|version|supported format|
+|---|---|
+|before ver.1.2.1|- Support `JPEG` or `YUV_420_888`<br/>- Support only when plane buffer's `rowStride` is same as `ImageWidth`|
+|ver.1.3.0|- Support when plane buffer's `rowStride` is different from `ImageWidth` |
+
+#### How to check for unsupported image formats
+
+You can check the device compatibility by using the `debug preview` feature added in ver.1.3.0.
+
+- Enable `debug preview` in config
+
+```javascript
+  monaca.BarcodeScanner.scan((result) => {
+    if (result.cancelled) {
+      // scan cancelled
+    } else {
+      // scan
+    }
+  }, (error) => {
+    // permission error
+    const error_message = error;
+  }, {
+    "debug" : {
+      "preview" : 1
+    }
+  });
+```
+
+- Thumbnail of the image  before barcode detection are displayed on the scan screen.
+
+If this thumbnail image is displayed distorted, it will be a device that does not support.
+
+## About detecting barcode
+
+### ITF code (since ver.1.2.0)
+
+- For iOS, only ITF-14 (14 digits ITF) is supported.
+- For Android, various digits ITF is supported.
+    - Becaushe ITF code standard is prone to cause misdetection, requiring the barcode to be exactly positioned within the detection area.
 
 ## License
 
