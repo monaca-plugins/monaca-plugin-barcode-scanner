@@ -9,9 +9,9 @@ Detect barcode or QR Code[^1] by device's camera and returns extracted strings.
 
 ### Scanning mode
 
-- `Normal` mode
+- `Normal` mode  
   The detected code is displayed on screen and selected by tapping(clicking).
-- `One Shot` mode
+- `One Shot` mode  
   The first detected code is selected and screen closed automatically.
 
 ### Detection timeout message
@@ -126,7 +126,7 @@ error: error message(string)
 
 ## iOS Quirks
 
-Since iOS 10, it's mandatory to provide a usage description in the `info.plist`.
+Since iOS 10, it's mandatory to provide a usage description in the `info.plist`.  
 The description string is displayed in the permission dialog box.
 
 This plugin requires the following usage descriptions:
@@ -157,8 +157,8 @@ To specify the compileSdkVersion in Cordova, you should set `android-targetSdkVe
 
 ### Barcode detection problem due to device model dependency
 
-This plugin detects barcodes by processing the image captured by the camera (ImageProxy) and passing it to the barcode detection library (MLKit).
-ImageProxy can store images in a variety of formats, and it depends on the device what format the camera captures.
+This plugin detects barcodes by processing the image captured by the camera (ImageProxy) and passing it to the barcode detection library (MLKit).  
+ImageProxy can store images in a variety of formats, and it depends on the device what format the camera captures.  
 Some devices may fail to detect barcodes because they are captured in a format not supported by the plugin.
 
 #### Supported format
@@ -194,6 +194,8 @@ You can check the device compatibility by using the `debug preview` feature adde
 - Thumbnail of the image  before barcode detection are displayed on the scan screen.
 
 If this thumbnail image is displayed distorted, it will be a device that does not support.
+
+<img width="270" alt="unsupported" src="https://user-images.githubusercontent.com/98803273/262234724-4c9b355f-a4eb-4205-aa57-9dfc868b0384.png">
 
 ## About detecting barcode
 
