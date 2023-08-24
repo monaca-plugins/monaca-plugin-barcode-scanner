@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+ /*
+  * Modifications copyright (C) 2023 Asial Corporation.
+  */
+
 package io.monaca.plugin.barcodescanner;
 
 import android.content.ContentResolver;
