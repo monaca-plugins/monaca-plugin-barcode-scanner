@@ -103,6 +103,7 @@ BOOL oneShot;
 BOOL showTimeoutPrompt;
 int timeoutSeconds;
 NSString* timeoutPrompt;
+NSMutableArray* availableCodeTypes;
 
 /// init
 - (BarcodeScannerViewController*)initWithOptions:(NSDictionary *)options {
@@ -424,10 +425,33 @@ NSString* timeoutPrompt;
     [self.session addOutput:output];
     // 読み取りたいバーコードの種類を指定
     [output setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-    [output setMetadataObjectTypes:@[AVMetadataObjectTypeQRCode, AVMetadataObjectTypeEAN13Code,
+    availableCodeTypes = [NSMutableArray arrayWithArray: @[
+        AVMetadataObjectTypeQRCode,
+        AVMetadataObjectTypeEAN13Code,
         AVMetadataObjectTypeEAN8Code,
-        AVMetadataObjectTypeITF14Code]];
-    
+        AVMetadataObjectTypeITF14Code,
+        AVMetadataObjectTypeInterleaved2of5Code,
+        AVMetadataObjectTypeCode39Code,
+        AVMetadataObjectTypeCode39Mod43Code,
+        AVMetadataObjectTypeCode93Code,
+        AVMetadataObjectTypeCode128Code,
+        AVMetadataObjectTypeUPCECode,
+        AVMetadataObjectTypeAztecCode,
+        AVMetadataObjectTypeDataMatrixCode,
+        AVMetadataObjectTypePDF417Code
+    ]];
+    if (@available(iOS 15.4, *)) {
+        // These types are supported iOS15.4 or later
+        [availableCodeTypes addObject:AVMetadataObjectTypeCodabarCode];
+        [availableCodeTypes addObject:AVMetadataObjectTypeGS1DataBarCode];
+        [availableCodeTypes addObject:AVMetadataObjectTypeGS1DataBarExpandedCode];
+        [availableCodeTypes addObject:AVMetadataObjectTypeGS1DataBarLimitedCode];
+        [availableCodeTypes addObject:AVMetadataObjectTypeMicroQRCode];
+    } else {
+        // Fallback on earlier versions
+    }
+    [output setMetadataObjectTypes:availableCodeTypes];
+
     // 検出エリアの設定
     // 検出エリアの座標(絶対値)を計算
     [self calculateDetectionArea];
@@ -468,10 +492,7 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
 
         // バーコードを検出
         NSString *barcodeDataStr = [(AVMetadataMachineReadableCodeObject *)data stringValue];
-        if ([data.type isEqualToString:AVMetadataObjectTypeQRCode]
-            || [data.type isEqualToString:AVMetadataObjectTypeEAN13Code]
-            || [data.type isEqualToString:AVMetadataObjectTypeEAN8Code]
-            || [data.type isEqualToString:AVMetadataObjectTypeITF14Code]) {
+        if ([availableCodeTypes containsObject:data.type]) {
 
             self.detectedText = barcodeDataStr;
             self.detectedFormat = [BarcodeScannerViewController getBarcodeFormatString:data.type];
@@ -530,6 +551,38 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
         format = @"EAN_13";
     } else if (type == AVMetadataObjectTypeITF14Code) {
         format = @"ITF";
+    } else if (type == AVMetadataObjectTypeCode39Code) {
+        format = @"CODE_39";
+    } else if (type == AVMetadataObjectTypeCode39Mod43Code) {
+        format = @"CODE_39";
+    } else if (type == AVMetadataObjectTypeCode93Code) {
+        format = @"CODE_93";
+    } else if (type == AVMetadataObjectTypeCode128Code) {
+        format = @"CODE_128";
+    } else if (type == AVMetadataObjectTypeInterleaved2of5Code) {
+        format = @"ITF";
+    } else if (type == AVMetadataObjectTypeUPCECode) {
+        format = @"UPC_E";
+    } else if (type == AVMetadataObjectTypeAztecCode) {
+        format = @"AZTEC";
+    } else if (type == AVMetadataObjectTypeDataMatrixCode) {
+        format = @"DATA_MATRIX";
+    } else if (type == AVMetadataObjectTypePDF417Code) {
+        format = @"PDF417";
+    } else if (@available(iOS 15.4, *)) {
+        if (type == AVMetadataObjectTypeCodabarCode) {
+            format = @"CODABAR";
+        } else if (type == AVMetadataObjectTypeGS1DataBarCode) {
+            format = @"GS1_DATABAR";
+        } else if (type == AVMetadataObjectTypeGS1DataBarExpandedCode) {
+            format = @"GS1_DATABAR";
+        } else if (type == AVMetadataObjectTypeGS1DataBarLimitedCode) {
+            format = @"GS1_DATABAR";
+        } else if (type == AVMetadataObjectTypeMicroQRCode) {
+            format = @"MICRO_QR_CODE";
+        }
+    } else {
+        // Fallback on earlier versions
     }
     
     return format;
