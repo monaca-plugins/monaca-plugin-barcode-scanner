@@ -37,6 +37,20 @@ A Specified message can be displayed if no code is detected for a certain period
 - EAN_8
 - EAN_13
 - ITF
+- CODE_128
+- CODE_39
+and more...
+
+Notes:
+- As of ver.1.4.0, we have expanded supported barcode types.  
+This plugin now scans almost all formats supported by the iOS or Android MKKit.
+- In additional to the types mentioned above, following types will be scanned.
+  - CODE_93, AZTEC, DATA_MATRIX, UPC_E, and others.
+- Some formats are exclusively supported on iOS.
+
+See [here](#About-detecting-barcode) for the caution of detection.
+
+> Some devices may fail to detect barcodes. See [here](#how-to-check-for-unsupported-image-formats) for details.
 
 ## API Reference
 
@@ -201,9 +215,19 @@ If this thumbnail image is displayed distorted, it will be a device that does no
 
 ### ITF code (since ver.1.2.0)
 
+Ver.1.2.0:
+
 - For iOS, only ITF-14 (14 digits ITF) is supported.
 - For Android, various digits ITF is supported.
-    - Becaushe ITF code standard is prone to cause misdetection, requiring the barcode to be exactly positioned within the detection area.
+
+Ver.1.4.0
+
+- Various digits ITF is supported on iOS.
+
+### Other barcode
+
+Caution:
+  - Because some barcode standard is prone to cause misdetection, requiring the barcode to be exactly positioned within the detection area.
 
 ## License
 

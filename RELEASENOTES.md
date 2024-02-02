@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.0
+
+- Support almost all barcode formats supported on iOS/Android(MLKit).
+
 ## 1.3.0
 
 - Support AQUOS sense7
