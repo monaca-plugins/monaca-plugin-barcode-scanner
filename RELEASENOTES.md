@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.1
+
+- Add information about iOS privacy manifest.
+
 ## 1.4.0
 
 - Support almost all barcode formats supported on iOS/Android(MLKit).
