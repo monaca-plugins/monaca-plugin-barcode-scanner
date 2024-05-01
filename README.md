@@ -229,12 +229,6 @@ Ver.1.4.0
 Caution:
   - Because some barcode standard is prone to cause misdetection, requiring the barcode to be exactly positioned within the detection area.
 
-## License
-
-see [LICENSE](./LICENSE)
-
-[^1]: QR Code is a registered trademark of DENSO WAVE INCORPORATED in Japan and in other countries.
-
 ## iOS Privacy Manifest
 
 As of May 1, 2024, Apple requires a privacy manifest file to be created for apps and third-party SDKs. The purpose of the privacy manifest file is to explain the data being collected and the reasons for the required APIs it uses. Starting with `cordova-ios@7.1.0`, APIs are available for configuring the privacy manifest file from `config.xml`.
@@ -247,3 +241,10 @@ Also, ensure all four keys—`NSPrivacyTracking`, `NSPrivacyTrackingDomains`, `N
 Additional Resources:
 - [App Privacy Details](https://developer.apple.com/app-store/app-privacy-details/)
 - [Privacy Manifest Files](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files?language=objc)
+
+## License
+
+see [LICENSE](./LICENSE)
+
+[^1]: QR Code is a registered trademark of DENSO WAVE INCORPORATED in Japan and in other countries.
+
