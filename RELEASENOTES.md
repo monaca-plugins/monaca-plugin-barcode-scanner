@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.2
+
+- Resolve conflict with cordova-plugin-health.
+
 ## 1.4.1
 
 - Add information about iOS privacy manifest.
