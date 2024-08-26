@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="@monaca/monaca-plugin-barcode-scanner" version="1.4.1" >
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="@monaca/monaca-plugin-barcode-scanner" version="1.4.2" >
   <name>@monaca/monaca-plugin-barcode-scanner</name>
   <description>MonacaBarcodeScannerPlugin</description>
   <author>Asial Corporation</author>
@@ -20,6 +20,7 @@
     <framework src="androidx.camera:camera-view:$CAMERA_LIBRARIES_VERSION" />
     <framework src="androidx.camera:camera-lifecycle:$CAMERA_LIBRARIES_VERSION" />
     <framework src="com.google.mlkit:barcode-scanning:17.2.0" />
+    <framework src="com.google.guava:guava:33.3.0-android" />
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="MonacaBarcodeScannerPlugin" >
         <param name="android-package" value="io.monaca.plugin.barcodescanner.BarcodeScanner"/>
