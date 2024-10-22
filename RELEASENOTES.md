@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.3
+
+- Fix an issue of scan screen when rotating the device.
+
 ## 1.4.2
 
 - Resolve conflict with cordova-plugin-health.

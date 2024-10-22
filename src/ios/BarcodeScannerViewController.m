@@ -127,9 +127,6 @@ NSMutableArray* availableCodeTypes;
     UIBarButtonItem *closeButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel:)];
     self.navigationItem.rightBarButtonItem = closeButtonItem;
 
-    // デバイス回転の通知
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceDidRotate:) name:UIDeviceOrientationDidChangeNotification object:nil];
-    
     [self startCamera];
 }
 
@@ -137,6 +134,14 @@ NSMutableArray* availableCodeTypes;
 /// @param animated
 - (void)viewWillAppear:(BOOL)animated {
     // UIModalPresentationFullScreen以外で表示されたときのためにUIの位置を調整する
+    [self layoutAllUIComponents];
+}
+
+/// override
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+
+    // デバイス回転時にUIの位置やプレビュー画面の向きを調整し直す
     [self layoutAllUIComponents];
 }
 
@@ -204,45 +209,17 @@ NSMutableArray* availableCodeTypes;
     return UIInterfaceOrientationMaskAll;
 }
 
-/// デバイスの回転の通知
-/// @param note
-- (void)deviceDidRotate:(NSNotification*)note {
-    // UIの位置やプレビュー画面の向きを調整し直す
-    [self layoutAllUIComponents];
-}
-
-/// convert UIDevice orientation to AVCaptureVideoOrientation
-///
-/// Caution:
-/// AVCaptureVideoPreviewLayerにおいてlanscapeモードではプレビュー画面が反転してしまうため
-/// AVCaptureVideoOrientationLandscapeLeft/Rightは逆にして返す
-///
-/// on landscape orientation, left/right is reversed in order to correct video capture preview orientation.
+/// convert UIInterfaceOrientation to AVCaptureVideoOrientation
 - (AVCaptureVideoOrientation) videoOrientationFromCurrentDeviceOrientation {
-    switch (UIDevice.currentDevice.orientation) {
-        case UIDeviceOrientationPortrait: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationLandscapeLeft: {
-            // return reversed value for video preview
-            return AVCaptureVideoOrientationLandscapeRight;
-        }
-        case UIDeviceOrientationLandscapeRight: {
-            // return reversed value for video preview
-            return AVCaptureVideoOrientationLandscapeLeft;
-        }
-        case UIDeviceOrientationPortraitUpsideDown: {
-            return AVCaptureVideoOrientationPortraitUpsideDown;
-        }
-        case UIDeviceOrientationFaceUp: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationFaceDown: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationUnknown: {
-            return AVCaptureVideoOrientationPortrait;
-        }
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (orientation == UIInterfaceOrientationPortrait) {
+        return AVCaptureVideoOrientationPortrait;
+    } else if (orientation == UIInterfaceOrientationLandscapeLeft) {
+        return AVCaptureVideoOrientationLandscapeLeft;
+    } else if (orientation == UIInterfaceOrientationLandscapeRight) {
+        return AVCaptureVideoOrientationLandscapeRight;
+    } else {
+        return AVCaptureVideoOrientationPortrait;
     }
 }
 
