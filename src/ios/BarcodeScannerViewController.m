@@ -105,6 +105,8 @@ int timeoutSeconds;
 NSString* timeoutPrompt;
 NSMutableArray* availableCodeTypes;
 
+UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
+
 /// init
 - (BarcodeScannerViewController*)initWithOptions:(NSDictionary *)options {
     self = [super init];
@@ -127,6 +129,10 @@ NSMutableArray* availableCodeTypes;
     UIBarButtonItem *closeButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel:)];
     self.navigationItem.rightBarButtonItem = closeButtonItem;
 
+    // デバイス回転の通知
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceDidRotate:) name:UIDeviceOrientationDidChangeNotification object:nil];
+    prevOrientation = [UIDevice.currentDevice orientation];
+    
     [self startCamera];
 }
 
@@ -135,6 +141,11 @@ NSMutableArray* availableCodeTypes;
 - (void)viewWillAppear:(BOOL)animated {
     // UIModalPresentationFullScreen以外で表示されたときのためにUIの位置を調整する
     [self layoutAllUIComponents];
+}
+
+/// override
+- (void)viewDidDisappear:(BOOL)animated {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
 }
 
 /// override
@@ -207,6 +218,17 @@ NSMutableArray* availableCodeTypes;
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     // 画面の回転に対応する
     return UIInterfaceOrientationMaskAll;
+}
+
+/// デバイスの回転の通知
+/// @param note
+- (void)deviceDidRotate:(NSNotification*)note {
+    UIDeviceOrientation orientation = [UIDevice.currentDevice orientation];
+    if (UIDeviceOrientationIsLandscape(prevOrientation) && UIDeviceOrientationIsLandscape(orientation)) {
+        // デバイスが180度回転されたとき(landscape=>landscape)は viewDidLayoutSubviews が呼び出されずプレビュー画面の向きが更新されないのでここで更新する
+        [self layoutPreviewLayer];
+    }
+    prevOrientation = orientation;
 }
 
 /// convert UIInterfaceOrientation to AVCaptureVideoOrientation
