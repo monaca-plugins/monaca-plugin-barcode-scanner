@@ -54,5 +54,6 @@
     <source-file src="src/ios/CDVBarcodeScanner.m"/>
     <source-file src="src/ios/BarcodeScannerViewController.h"/>
     <source-file src="src/ios/BarcodeScannerViewController.m"/>
+    <resource-file src="src/ios/CDVBarcodeScanner.bundle"/>
   </platform>
 </plugin>

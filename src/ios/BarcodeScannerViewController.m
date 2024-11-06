@@ -93,6 +93,8 @@ NSString *const DETECTED_TIMEOUT_PROMPT_DEFAULT = @"Barcode not detected";
 /// 検出エリアの座標
 @property CGRect detectionAreaRect;
 
+- (IBAction)torchButtonPressed:(id)sender;
+
 @end
 
 @implementation BarcodeScannerViewController
@@ -104,6 +106,7 @@ BOOL showTimeoutPrompt;
 int timeoutSeconds;
 NSString* timeoutPrompt;
 NSMutableArray* availableCodeTypes;
+BOOL showTorchButton;
 
 UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
 
@@ -117,6 +120,7 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     showTimeoutPrompt = [self doesShowTimeoutPrompt:options];
     timeoutSeconds = [self timeoutValue:options];
     timeoutPrompt = [self timeoutPromptText:options];
+    showTorchButton = [self doesShowTorch:options];
 
     return self;
 }
@@ -128,6 +132,24 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     // 閉じるボタンの作成
     UIBarButtonItem *closeButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel:)];
     self.navigationItem.rightBarButtonItem = closeButtonItem;
+    // torchボタンの作成
+    if (showTorchButton) {
+        AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        if ([device hasTorch] && [device hasFlash]) {
+            NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"CDVBarcodeScanner" withExtension:@"bundle"];
+            NSBundle *bundle = [NSBundle bundleWithURL:bundleURL];
+            NSString *imagePath = [bundle pathForResource:@"torch" ofType:@"png"];
+            UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
+            
+            id torchButton = [[UIBarButtonItem alloc]
+                              initWithImage:image
+                              style:UIBarButtonItemStylePlain
+                              target:(id)self
+                              action:@selector(torchButtonPressed:)
+            ];
+            self.navigationItem.leftBarButtonItem = torchButton;
+        }
+    }
 
     // デバイス回転の通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceDidRotate:) name:UIDeviceOrientationDidChangeNotification object:nil];
@@ -204,6 +226,13 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     if (self.delegate) {
         [self.delegate didDismiss:nil];
     }
+}
+
+#pragma mark - Handler
+
+- (IBAction)torchButtonPressed:(id)sender
+{
+    [self toggleTorch];
 }
 
 #pragma mark - Orientation
@@ -587,6 +616,18 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
     return format;
 }
 
+/// ライトON/OFF
+- (void)toggleTorch {
+    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    [device lockForConfiguration:nil];
+    if (device.torchMode == AVCaptureTorchModeOff) {
+        [device setTorchMode:AVCaptureTorchModeOn];
+    } else {
+        [device setTorchMode:AVCaptureTorchModeOff];
+    }
+    [device unlockForConfiguration];
+}
+
 #pragma mark - Options
 
 - (BOOL)isOneShot:(NSDictionary*)options {
@@ -640,6 +681,18 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
         return prompt;
     } else {
         return DETECTED_TIMEOUT_PROMPT_DEFAULT;
+    }
+}
+
+- (BOOL)doesShowTorch:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return NO;
+    }
+    id showTorch = [options valueForKeyPath:@"torch.show"];
+    if ([self isBoolNumber:showTorch]) {
+        return [showTorch boolValue];
+    } else {
+        return NO;
     }
 }
 
