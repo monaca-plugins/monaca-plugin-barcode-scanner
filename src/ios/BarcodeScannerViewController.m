@@ -105,6 +105,8 @@ int timeoutSeconds;
 NSString* timeoutPrompt;
 NSMutableArray* availableCodeTypes;
 
+UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
+
 /// init
 - (BarcodeScannerViewController*)initWithOptions:(NSDictionary *)options {
     self = [super init];
@@ -129,6 +131,7 @@ NSMutableArray* availableCodeTypes;
 
     // デバイス回転の通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceDidRotate:) name:UIDeviceOrientationDidChangeNotification object:nil];
+    prevOrientation = [UIDevice.currentDevice orientation];
     
     [self startCamera];
 }
@@ -137,6 +140,19 @@ NSMutableArray* availableCodeTypes;
 /// @param animated
 - (void)viewWillAppear:(BOOL)animated {
     // UIModalPresentationFullScreen以外で表示されたときのためにUIの位置を調整する
+    [self layoutAllUIComponents];
+}
+
+/// override
+- (void)viewDidDisappear:(BOOL)animated {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
+}
+
+/// override
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+
+    // デバイス回転時にUIの位置やプレビュー画面の向きを調整し直す
     [self layoutAllUIComponents];
 }
 
@@ -207,42 +223,25 @@ NSMutableArray* availableCodeTypes;
 /// デバイスの回転の通知
 /// @param note
 - (void)deviceDidRotate:(NSNotification*)note {
-    // UIの位置やプレビュー画面の向きを調整し直す
-    [self layoutAllUIComponents];
+    UIDeviceOrientation orientation = [UIDevice.currentDevice orientation];
+    if (UIDeviceOrientationIsLandscape(prevOrientation) && UIDeviceOrientationIsLandscape(orientation)) {
+        // デバイスが180度回転されたとき(landscape=>landscape)は viewDidLayoutSubviews が呼び出されずプレビュー画面の向きが更新されないのでここで更新する
+        [self layoutPreviewLayer];
+    }
+    prevOrientation = orientation;
 }
 
-/// convert UIDevice orientation to AVCaptureVideoOrientation
-///
-/// Caution:
-/// AVCaptureVideoPreviewLayerにおいてlanscapeモードではプレビュー画面が反転してしまうため
-/// AVCaptureVideoOrientationLandscapeLeft/Rightは逆にして返す
-///
-/// on landscape orientation, left/right is reversed in order to correct video capture preview orientation.
+/// convert UIInterfaceOrientation to AVCaptureVideoOrientation
 - (AVCaptureVideoOrientation) videoOrientationFromCurrentDeviceOrientation {
-    switch (UIDevice.currentDevice.orientation) {
-        case UIDeviceOrientationPortrait: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationLandscapeLeft: {
-            // return reversed value for video preview
-            return AVCaptureVideoOrientationLandscapeRight;
-        }
-        case UIDeviceOrientationLandscapeRight: {
-            // return reversed value for video preview
-            return AVCaptureVideoOrientationLandscapeLeft;
-        }
-        case UIDeviceOrientationPortraitUpsideDown: {
-            return AVCaptureVideoOrientationPortraitUpsideDown;
-        }
-        case UIDeviceOrientationFaceUp: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationFaceDown: {
-            return AVCaptureVideoOrientationPortrait;
-        }
-        case UIDeviceOrientationUnknown: {
-            return AVCaptureVideoOrientationPortrait;
-        }
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (orientation == UIInterfaceOrientationPortrait) {
+        return AVCaptureVideoOrientationPortrait;
+    } else if (orientation == UIInterfaceOrientationLandscapeLeft) {
+        return AVCaptureVideoOrientationLandscapeLeft;
+    } else if (orientation == UIInterfaceOrientationLandscapeRight) {
+        return AVCaptureVideoOrientationLandscapeRight;
+    } else {
+        return AVCaptureVideoOrientationPortrait;
     }
 }
 
