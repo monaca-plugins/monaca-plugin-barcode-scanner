@@ -41,6 +41,7 @@
     <resource-file src="src/android/res/layout/activity_barcode_scanner.xml" target="res/layout/activity_barcode_scanner.xml" />
     <resource-file src="src/android/res/drawable/rectangle.xml" target="res/drawable/rectangle.xml" />
     <resource-file src="src/android/res/drawable/round_btn.xml" target="res/drawable/round_btn.xml" />
+    <resource-file src="src/android/res/drawable/torch_btn.xml" target="res/drawable/torch_btn.xml" />
   </platform>
 
   <!-- ios -->
