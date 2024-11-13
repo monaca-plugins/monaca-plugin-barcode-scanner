@@ -100,6 +100,10 @@ error: error message(string)
     "timeout" : 5,
     "prompt" : "Not detected"
   },
+  "torch" : {
+    "enable" : true,
+    "defaultOn" : false
+  },
   "debug" : {
     "preview" : 0
   }
@@ -112,6 +116,8 @@ error: error message(string)
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
+|torch.enable|boolean|false|Enable or disable the torch light.|
+|torch.defaultOn|boolean|false|Launch with the torch turned on.|
 |debug.preview<br/>(android only)|int|0|Displays camera preview bitmap(before sending to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
 
 ## Example

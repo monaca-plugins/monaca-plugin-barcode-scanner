@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.5.0
+
+- Add torch light feature.
+
 ## 1.4.3
 
 - Fix an issue of scan screen when rotating the device.
