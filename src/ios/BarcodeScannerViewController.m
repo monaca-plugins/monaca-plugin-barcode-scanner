@@ -106,7 +106,8 @@ BOOL showTimeoutPrompt;
 int timeoutSeconds;
 NSString* timeoutPrompt;
 NSMutableArray* availableCodeTypes;
-BOOL showTorchButton;
+BOOL enableTorch;
+BOOL isTorchOn;
 
 UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
 
@@ -120,7 +121,8 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     showTimeoutPrompt = [self doesShowTimeoutPrompt:options];
     timeoutSeconds = [self timeoutValue:options];
     timeoutPrompt = [self timeoutPromptText:options];
-    showTorchButton = [self doesShowTorch:options];
+    enableTorch = [self doesEnableTorch:options];
+    isTorchOn = enableTorch && [self defaultTorchOn:options];
 
     return self;
 }
@@ -133,7 +135,7 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     UIBarButtonItem *closeButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel:)];
     self.navigationItem.rightBarButtonItem = closeButtonItem;
     // torchボタンの作成
-    if (showTorchButton) {
+    if (enableTorch) {
         AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
         if ([device hasTorch] && [device hasFlash]) {
             NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"CDVBarcodeScanner" withExtension:@"bundle"];
@@ -156,6 +158,11 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     prevOrientation = [UIDevice.currentDevice orientation];
     
     [self startCamera];
+    
+    // ライトデフォルトON/OFF
+    if (enableTorch) {
+        isTorchOn = [self turnOnTorch:isTorchOn];
+    }
 }
 
 /// override
@@ -618,14 +625,20 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
 
 /// ライトON/OFF
 - (void)toggleTorch {
+    isTorchOn = [self turnOnTorch:!isTorchOn];
+}
+
+- (BOOL)turnOnTorch:(BOOL)on {
     AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     [device lockForConfiguration:nil];
-    if (device.torchMode == AVCaptureTorchModeOff) {
+    if (on) {
         [device setTorchMode:AVCaptureTorchModeOn];
     } else {
         [device setTorchMode:AVCaptureTorchModeOff];
     }
     [device unlockForConfiguration];
+
+    return (device.torchMode != AVCaptureTorchModeOff);
 }
 
 #pragma mark - Options
@@ -684,13 +697,25 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
     }
 }
 
-- (BOOL)doesShowTorch:(NSDictionary*)options {
+- (BOOL)doesEnableTorch:(NSDictionary*)options {
     if ([options isEqual:[NSNull null]]) {
         return NO;
     }
-    id showTorch = [options valueForKeyPath:@"torch.show"];
-    if ([self isBoolNumber:showTorch]) {
-        return [showTorch boolValue];
+    id enable = [options valueForKeyPath:@"torch.enable"];
+    if ([self isBoolNumber:enable]) {
+        return [enable boolValue];
+    } else {
+        return NO;
+    }
+}
+
+- (BOOL)defaultTorchOn:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return NO;
+    }
+    id defaultOn = [options valueForKeyPath:@"torch.defaultOn"];
+    if ([self isBoolNumber:defaultOn]) {
+        return [defaultOn boolValue];
     } else {
         return NO;
     }

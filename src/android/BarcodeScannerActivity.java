@@ -81,7 +81,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private int timeoutPromptSpan;
     private String timeoutPrompt = "Barcode not detected";
     private int debugPreviewMode = 0;
-    private boolean showTorchButton = false;
+    private boolean enableTorch = false;
 
     private Handler timeoutPromptHandler;
     private Runnable timeoutPromptRunnable;
@@ -111,7 +111,8 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             timeoutPrompt = prompt;
         }
         debugPreviewMode = intent.getIntExtra("debug.preview", 0);
-        showTorchButton = intent.getBooleanExtra("torch.show", false);
+        enableTorch = intent.getBooleanExtra("torch.enable", false);
+        torchOn = enableTorch && intent.getBooleanExtra("torch.defaultOn", false);
 
         // create UI from resource
         setContentView(LayoutInflater.from(this).inflate(layoutId, null));
@@ -149,7 +150,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         });
         // torch button
         torchButton = findViewById(torchButtonId);
-        if (showTorchButton) {
+        if (enableTorch) {
             torchButton.setVisibility(View.VISIBLE);
             torchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -294,21 +295,29 @@ public class BarcodeScannerActivity extends AppCompatActivity {
 
         // bind preview and analyzer to lifecycle
         camera = cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
+
+        // set default torch state
+        if (enableTorch) {
+            torchOn = turnOnTorch(torchOn);
+        }
     }
 
     /**
-     *
+     * Swap torch state on/off
      */
     void toggleTorch() {
-        if (camera == null)
-            return;
+        torchOn = turnOnTorch(!torchOn);
+    }
 
-        if (torchOn) {
-            camera.getCameraControl().enableTorch(false);
-        } else {
-            camera.getCameraControl().enableTorch(true);
-        }
-        torchOn = !torchOn;
+    /**
+     * Switch torch on/off
+     */
+    boolean turnOnTorch(boolean on) {
+        if (camera == null)
+            return false;
+
+        camera.getCameraControl().enableTorch(on);
+        return on;
     }
 
     /**
