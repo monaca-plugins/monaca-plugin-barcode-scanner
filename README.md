@@ -140,6 +140,10 @@ error: error message(string)
       "show" : true,
       "timeout" : 5,
       "prompt" : "Not detected"
+    },
+    "torch" : {
+      "enable" : true,
+      "defaultOn" : false
     }
   });
 ```
