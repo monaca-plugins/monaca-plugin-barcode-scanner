@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="@monaca/monaca-plugin-barcode-scanner" version="1.4.3" >
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="@monaca/monaca-plugin-barcode-scanner" version="1.5.0" >
   <name>@monaca/monaca-plugin-barcode-scanner</name>
   <description>MonacaBarcodeScannerPlugin</description>
   <author>Asial Corporation</author>
@@ -41,6 +41,7 @@
     <resource-file src="src/android/res/layout/activity_barcode_scanner.xml" target="res/layout/activity_barcode_scanner.xml" />
     <resource-file src="src/android/res/drawable/rectangle.xml" target="res/drawable/rectangle.xml" />
     <resource-file src="src/android/res/drawable/round_btn.xml" target="res/drawable/round_btn.xml" />
+    <resource-file src="src/android/res/drawable/torch_btn.xml" target="res/drawable/torch_btn.xml" />
   </platform>
 
   <!-- ios -->
@@ -54,5 +55,6 @@
     <source-file src="src/ios/CDVBarcodeScanner.m"/>
     <source-file src="src/ios/BarcodeScannerViewController.h"/>
     <source-file src="src/ios/BarcodeScannerViewController.m"/>
+    <resource-file src="src/ios/CDVBarcodeScanner.bundle"/>
   </platform>
 </plugin>

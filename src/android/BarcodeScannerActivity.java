@@ -6,6 +6,7 @@ package io.monaca.plugin.barcodescanner;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
@@ -56,7 +57,10 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private Barcode detectedBarcode;
     private TextView timeoutPromptView;
     private ImageView debugPreviewView;
+    private Button torchButton;
+    private boolean torchOn = false;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
+    private Camera camera;
 
     public static final String INTENT_DETECTED_TEXT = "detectedText";
     public static final String INTENT_DETECTED_FORMAT = "detectedFormat";
@@ -77,6 +81,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private int timeoutPromptSpan;
     private String timeoutPrompt = "Barcode not detected";
     private int debugPreviewMode = 0;
+    private boolean enableTorch = false;
 
     private Handler timeoutPromptHandler;
     private Runnable timeoutPromptRunnable;
@@ -94,6 +99,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         int detectedTextButtonId = getResourceId(res, "detected_text", "id", packageName);
         int detectionAreaId = getResourceId(res, "detection_area", "id", packageName);
         int timeoutPromptId = getResourceId(res, "timeout_prompt", "id", packageName);
+        int torchButtonId = getResourceId(res, "torch_btn", "id", packageName);
         int debugPreviewId = getResourceId(res, "debug_preview", "id", packageName);
 
         Intent intent = getIntent();
@@ -105,6 +111,8 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             timeoutPrompt = prompt;
         }
         debugPreviewMode = intent.getIntExtra("debug.preview", 0);
+        enableTorch = intent.getBooleanExtra("torch.enable", false);
+        torchOn = enableTorch && intent.getBooleanExtra("torch.defaultOn", false);
 
         // create UI from resource
         setContentView(LayoutInflater.from(this).inflate(layoutId, null));
@@ -140,6 +148,20 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                 finish();
             }
         });
+        // torch button
+        torchButton = findViewById(torchButtonId);
+        if (enableTorch) {
+            torchButton.setVisibility(View.VISIBLE);
+            torchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    toggleTorch();
+                }
+            });
+        } else {
+            torchButton.setVisibility(View.INVISIBLE);
+        }
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -272,7 +294,30 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         imageAnalysis.setAnalyzer(executor, analyzer);
 
         // bind preview and analyzer to lifecycle
-        cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
+        camera = cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
+
+        // set default torch state
+        if (enableTorch) {
+            torchOn = turnOnTorch(torchOn);
+        }
+    }
+
+    /**
+     * Swap torch state on/off
+     */
+    void toggleTorch() {
+        torchOn = turnOnTorch(!torchOn);
+    }
+
+    /**
+     * Switch torch on/off
+     */
+    boolean turnOnTorch(boolean on) {
+        if (camera == null)
+            return false;
+
+        camera.getCameraControl().enableTorch(on);
+        return on;
     }
 
     /**
