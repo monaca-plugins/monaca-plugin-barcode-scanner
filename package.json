@@ -1,6 +1,6 @@
 {
   "name": "@monaca/monaca-plugin-barcode-scanner",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Monaca Barcode Scanner Plugin",
   "cordova": {
     "id": "@monaca/monaca-plugin-barcode-scanner",

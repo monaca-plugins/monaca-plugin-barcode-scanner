@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.6.1
+
+- Add edge-to-edge display support for torch button.
+
+## 1.6.0
+
+- Support 16KB page size.
+
 ## 1.5.0
 
 - Add torch light feature.
