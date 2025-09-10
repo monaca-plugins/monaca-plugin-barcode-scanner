@@ -34,6 +34,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -158,6 +162,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
                     toggleTorch();
                 }
             });
+            setupTorchButtonForEdgeToEdge(torchButton);
         } else {
             torchButton.setVisibility(View.INVISIBLE);
         }
@@ -466,5 +471,21 @@ public class BarcodeScannerActivity extends AppCompatActivity {
      */
     private static int getResourceId(Resources res, String name, String defType, String defPackage) {
         return res.getIdentifier(name, defType, defPackage);
+    }
+
+    /**
+     * Setup torch button for edge-to-edge display compatibility
+     *
+     * @param torchBtn The torch button to setup
+     */
+    private void setupTorchButtonForEdgeToEdge(Button torchBtn) {
+        ViewCompat.setOnApplyWindowInsetsListener(torchBtn, (v, insets) -> {
+            Insets safe = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            v.setTranslationX(safe.left);
+            v.setTranslationY(safe.top);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(torchBtn);
     }
 }
