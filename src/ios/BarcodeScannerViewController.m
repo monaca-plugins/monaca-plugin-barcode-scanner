@@ -14,8 +14,8 @@
     #define LOGD(...)
 #endif
 
-CGFloat const DETECTION_AREA_SIZE = 240.0;
-CGFloat const DETECTION_AREA_SIZE_IPAD = 320.0;
+CGFloat const DETECTION_AREA_SIZE_DEFAULT = 240.0;
+CGFloat const DETECTION_AREA_SIZE_IPAD_DEFAULT = 320.0;
 CGFloat const DETECTION_AREA_BORDER = 8;
 
 NSString *const DELEGATE_DETECTED_TEXT = @"text";
