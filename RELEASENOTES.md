@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.7.0
+
+- Add customizable detection area for barcode scanner.
+
 ## 1.6.1
 
 - Add edge-to-edge display support for torch button.
