@@ -95,6 +95,10 @@ error: error message(string)
 ```
 {
   "oneShot" : true,
+  "detectionArea" : {
+    "width" : 300,
+    "height" : 200
+  },
   "timeoutPrompt" : {
     "show" : true,
     "timeout" : 5,
@@ -113,6 +117,8 @@ error: error message(string)
 |parameter|type|default value|description|
 |---|---|---|---|
 |oneShot|boolean|false|Enable or disable One Shot mode.|
+|detectionArea.width|number|220|Detection area width in dp (50-500). Defines the scanning region width.|
+|detectionArea.height|number|220|Detection area height in dp (50-500). Defines the scanning region height.|
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
@@ -121,6 +127,8 @@ error: error message(string)
 |debug.preview<br/>(android only)|int|0|Displays camera preview bitmap(before sending to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
 
 ## Example
+
+### Basic Example
 
 ```javascript
   monaca.BarcodeScanner.scan((result) => {
@@ -145,6 +153,35 @@ error: error message(string)
       "enable" : true,
       "defaultOn" : false
     }
+  });
+```
+
+### Custom Detection Area Example
+
+```javascript
+  // Large square detection area
+  monaca.BarcodeScanner.scan((result) => {
+    console.log("Barcode detected:", result.data.text);
+  }, (error) => {
+    console.error("Scan error:", error);
+  }, {
+    "detectionArea": {
+      "width": 300,
+      "height": 300
+    }
+  });
+
+  // Rectangle detection area for wide barcodes
+  monaca.BarcodeScanner.scan((result) => {
+    console.log("Barcode detected:", result.data.text);
+  }, (error) => {
+    console.error("Scan error:", error);
+  }, {
+    "detectionArea": {
+      "width": 350,
+      "height": 200
+    },
+    "oneShot": true
   });
 ```
 

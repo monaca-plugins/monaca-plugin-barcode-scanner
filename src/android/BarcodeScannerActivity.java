@@ -117,6 +117,14 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         debugPreviewMode = intent.getIntExtra("debug.preview", 0);
         enableTorch = intent.getBooleanExtra("torch.enable", false);
         torchOn = enableTorch && intent.getBooleanExtra("torch.defaultOn", false);
+        
+        // Detection area customization parameters
+        int customAreaWidth = intent.getIntExtra("detectionArea.width", 220);  // Default 220dp
+        int customAreaHeight = intent.getIntExtra("detectionArea.height", 220); // Default 220dp
+        
+        // Ensure minimum size for usability
+        customAreaWidth = Math.max(50, customAreaWidth);
+        customAreaHeight = Math.max(50, customAreaHeight);
 
         // create UI from resource
         setContentView(LayoutInflater.from(this).inflate(layoutId, null));
@@ -127,6 +135,10 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         detectedTextButton.setTextColor(DETECTED_TEXT_COLOR);
         detectedTextButton.setVisibility(View.INVISIBLE);
         detectionArea = findViewById(detectionAreaId);
+        
+        // Apply custom detection area size
+        applyDetectionAreaSize(customAreaWidth, customAreaHeight);
+        
         GradientDrawable drawable = (GradientDrawable) detectionArea.getDrawable();
         drawable.setStroke(DETECTION_AREA_BORDER, DETECTION_AREA_COLOR);
         // timeout prompt
@@ -487,5 +499,34 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             return insets;
         });
         ViewCompat.requestApplyInsets(torchBtn);
+    }
+
+    /**
+     * Apply custom detection area size
+     *
+     * @param widthDp  Width in dp
+     * @param heightDp Height in dp
+     */
+    private void applyDetectionAreaSize(int widthDp, int heightDp) {
+        if (detectionArea != null) {
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params = 
+                (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) detectionArea.getLayoutParams();
+            
+            params.width = dpToPx(widthDp);
+            params.height = dpToPx(heightDp);
+            
+            detectionArea.setLayoutParams(params);
+        }
+    }
+
+    /**
+     * Convert dp to px
+     *
+     * @param dp Value in dp
+     * @return Value in px
+     */
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }

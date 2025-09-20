@@ -14,8 +14,8 @@
     #define LOGD(...)
 #endif
 
-CGFloat const DETECTION_AREA_SIZE = 240.0;
-CGFloat const DETECTION_AREA_SIZE_IPAD = 320.0;
+CGFloat const DETECTION_AREA_SIZE_DEFAULT = 240.0;
+CGFloat const DETECTION_AREA_SIZE_IPAD_DEFAULT = 320.0;
 CGFloat const DETECTION_AREA_BORDER = 8;
 
 NSString *const DELEGATE_DETECTED_TEXT = @"text";
@@ -93,6 +93,10 @@ NSString *const DETECTED_TIMEOUT_PROMPT_DEFAULT = @"Barcode not detected";
 /// 検出エリアの座標
 @property CGRect detectionAreaRect;
 
+// Custom detection area size properties
+@property CGFloat customAreaWidth;
+@property CGFloat customAreaHeight;
+
 - (IBAction)torchButtonPressed:(id)sender;
 
 @end
@@ -123,6 +127,10 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     timeoutPrompt = [self timeoutPromptText:options];
     enableTorch = [self doesEnableTorch:options];
     isTorchOn = enableTorch && [self defaultTorchOn:options];
+    
+    // Detection area customization parameters
+    self.customAreaWidth = [self detectionAreaWidth:options];
+    self.customAreaHeight = [self detectionAreaHeight:options];
 
     return self;
 }
@@ -307,8 +315,21 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
 
 /// 検出範囲の座標(絶対値)を計算する
 - (void)calculateDetectionArea {
-    CGFloat areaSize = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? DETECTION_AREA_SIZE_IPAD : DETECTION_AREA_SIZE;
-    self.detectionAreaRect = CGRectMake((self.view.frame.size.width - areaSize) / 2, (self.view.frame.size.height - areaSize) / 2, areaSize, areaSize);
+    // Use custom area size if specified, otherwise use device-appropriate default values
+    CGFloat defaultWidth = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? 
+        DETECTION_AREA_SIZE_IPAD_DEFAULT : DETECTION_AREA_SIZE_DEFAULT;
+    CGFloat defaultHeight = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? 
+        DETECTION_AREA_SIZE_IPAD_DEFAULT : DETECTION_AREA_SIZE_DEFAULT;
+        
+    CGFloat areaWidth = (self.customAreaWidth > 0) ? self.customAreaWidth : defaultWidth;
+    CGFloat areaHeight = (self.customAreaHeight > 0) ? self.customAreaHeight : defaultHeight;
+    
+    self.detectionAreaRect = CGRectMake(
+        (self.view.frame.size.width - areaWidth) / 2, 
+        (self.view.frame.size.height - areaHeight) / 2, 
+        areaWidth, 
+        areaHeight
+    );
 }
 
 /// 検出範囲の画面上の範囲を計算する
@@ -738,6 +759,42 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
     CFTypeID boolID = CFBooleanGetTypeID();
     CFTypeID numID = CFGetTypeID((__bridge CFTypeRef)(obj));
     return numID == boolID;
+}
+
+/// Get detection area width from options
+- (CGFloat)detectionAreaWidth:(NSDictionary*)options {
+    CGFloat defaultSize = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? 
+        DETECTION_AREA_SIZE_IPAD_DEFAULT : DETECTION_AREA_SIZE_DEFAULT;
+        
+    if ([options isEqual:[NSNull null]]) {
+        return defaultSize;
+    }
+    id width = [options valueForKeyPath:@"detectionArea.width"];
+    if ([self isNumber:width]) {
+        CGFloat value = [width floatValue];
+        // Ensure minimum size for usability
+        return fmax(50.0, value);
+    } else {
+        return defaultSize;
+    }
+}
+
+/// Get detection area height from options
+- (CGFloat)detectionAreaHeight:(NSDictionary*)options {
+    CGFloat defaultSize = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? 
+        DETECTION_AREA_SIZE_IPAD_DEFAULT : DETECTION_AREA_SIZE_DEFAULT;
+        
+    if ([options isEqual:[NSNull null]]) {
+        return defaultSize;
+    }
+    id height = [options valueForKeyPath:@"detectionArea.height"];
+    if ([self isNumber:height]) {
+        CGFloat value = [height floatValue];
+        // Ensure minimum size for usability
+        return fmax(50.0, value);
+    } else {
+        return defaultSize;
+    }
 }
 
 @end
