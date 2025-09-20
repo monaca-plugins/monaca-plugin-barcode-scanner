@@ -117,14 +117,19 @@ error: error message(string)
 |parameter|type|default value|description|
 |---|---|---|---|
 |oneShot|boolean|false|Enable or disable One Shot mode.|
-|detectionArea.width|number|220|Detection area width in dp (50-500). Defines the scanning region width.|
-|detectionArea.height|number|220|Detection area height in dp (50-500). Defines the scanning region height.|
+|detectionArea.width|number|Android: 220 / iOS: 240 (iPhone), 320 (iPad)|Detection area width in dp/pt. Minimum 50; no explicit maximum. Android uses dp; iOS uses pt.|
+|detectionArea.height|number|Android: 220 / iOS: 240 (iPhone), 320 (iPad)|Detection area height in dp/pt. Minimum 50; no explicit maximum. Android uses dp; iOS uses pt.|
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
 |torch.enable|boolean|false|Enable or disable the torch light.|
 |torch.defaultOn|boolean|false|Launch with the torch turned on.|
 |debug.preview<br/>(android only)|int|0|Displays camera preview bitmap(before sending to MLKit) on screen.<br/>0: OFF(default)<br/>1: Inside detection area <br/>2: Whole camera image|
+
+Note on units and defaults:
+- Units: Values are density-independent lengths. Android uses dp; iOS uses pt.
+- Bounds: Minimum is 50 (enforced on both iOS/Android). There is no explicit maximum in implementation; avoid specifying values that exceed the visible screen area.
+- Defaults: Android uses 220dp; iOS uses 240pt on iPhone and 320pt on iPad.
 
 ## Example
 
@@ -294,4 +299,3 @@ Additional Resources:
 see [LICENSE](./LICENSE)
 
 [^1]: QR Code is a registered trademark of DENSO WAVE INCORPORATED in Japan and in other countries.
-

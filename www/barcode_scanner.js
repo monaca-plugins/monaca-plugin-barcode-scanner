@@ -9,7 +9,7 @@ const BarcodeScanner = function () {};
  * @param {function} success - Success callback function
  * @param {function} fail - Error callback function  
  * @param {object} config - Optional configuration object
- * @param {object} config.detectionArea - Detection area configuration (width, height in dp)
+ * @param {object} config.detectionArea - Detection area configuration (width, height in density-independent units: Android=dp, iOS=pt)
  */
 BarcodeScanner.prototype.scan = function(success, fail, config) {
   cordova.exec(success, fail, "MonacaBarcodeScannerPlugin", "scan", [config]);
