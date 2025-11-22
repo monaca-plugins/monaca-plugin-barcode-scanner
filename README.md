@@ -99,6 +99,8 @@ error: error message(string)
     "width" : 300,
     "height" : 200
   },
+  "itfMinLength" : 14,
+  "itfMaxLength" : 14,
   "timeoutPrompt" : {
     "show" : true,
     "timeout" : 5,
@@ -119,6 +121,8 @@ error: error message(string)
 |oneShot|boolean|false|Enable or disable One Shot mode.|
 |detectionArea.width|number|Android: 220 / iOS: 240 (iPhone), 320 (iPad)|Detection area width in dp/pt. Minimum 50; no explicit maximum. Android uses dp; iOS uses pt.|
 |detectionArea.height|number|Android: 220 / iOS: 240 (iPhone), 320 (iPad)|Detection area height in dp/pt. Minimum 50; no explicit maximum. Android uses dp; iOS uses pt.|
+|itfMinLength|number|0|Minimum length for ITF barcode detection. ITF codes shorter than this value will be ignored. Use this to prevent partial ITF code misdetection. (0 = no filter)|
+|itfMaxLength|number|0|Maximum length for ITF barcode detection. ITF codes longer than this value will be ignored. Use this together with itfMinLength to target specific ITF formats like ITF-14. (0 = no filter)|
 |timeoutPrompt.show|boolean|false|Show or hide detection timeout message.|
 |timeoutPrompt.timeout|int|-|Period(in seconds) from when the barcode not detected until the message is displayed.|
 |timeoutPrompt.prompt|string|"Barcode not detected"|Timeout message.|
@@ -275,6 +279,34 @@ Ver.1.2.0:
 Ver.1.4.0
 
 - Various digits ITF is supported on iOS.
+
+#### ITF misdetection prevention
+
+ITF (Interleaved 2 of 5) barcodes can be misdetected when only partially visible in the camera view. This is because partial ITF codes may still form valid shorter barcodes.
+
+To prevent this, use the `itfMinLength` and `itfMaxLength` options to filter ITF codes by length:
+
+```javascript
+// Example: Only accept ITF-14 codes (exactly 14 digits)
+monaca.BarcodeScanner.scan((result) => {
+  console.log("Barcode detected:", result.data.text);
+}, (error) => {
+  console.error("Scan error:", error);
+}, {
+  "itfMinLength": 14,
+  "itfMaxLength": 14
+});
+
+// Example: Accept ITF codes between 6 and 14 digits (ITF-6 to ITF-14)
+monaca.BarcodeScanner.scan((result) => {
+  console.log("Barcode detected:", result.data.text);
+}, (error) => {
+  console.error("Scan error:", error);
+}, {
+  "itfMinLength": 6,
+  "itfMaxLength": 14
+});
+```
 
 ### Other barcode
 

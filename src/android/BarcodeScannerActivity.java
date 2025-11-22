@@ -86,6 +86,8 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     private String timeoutPrompt = "Barcode not detected";
     private int debugPreviewMode = 0;
     private boolean enableTorch = false;
+    private int itfMinLength = 0;
+    private int itfMaxLength = 0;
 
     private Handler timeoutPromptHandler;
     private Runnable timeoutPromptRunnable;
@@ -117,7 +119,9 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         debugPreviewMode = intent.getIntExtra("debug.preview", 0);
         enableTorch = intent.getBooleanExtra("torch.enable", false);
         torchOn = enableTorch && intent.getBooleanExtra("torch.defaultOn", false);
-        
+        itfMinLength = intent.getIntExtra("itfMinLength", 0);
+        itfMaxLength = intent.getIntExtra("itfMaxLength", 0);
+
         // Detection area customization parameters
         int customAreaWidth = intent.getIntExtra("detectionArea.width", 220);  // Default 220dp
         int customAreaHeight = intent.getIntExtra("detectionArea.height", 220); // Default 220dp
@@ -350,6 +354,18 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             if (detectedText == null) {
                 detectedBarcode = null;
                 continue;
+            }
+            // ITF length filter
+            if (barcode.getFormat() == Barcode.FORMAT_ITF) {
+                int len = detectedText.length();
+                if (itfMinLength > 0 && len < itfMinLength) {
+                    detectedBarcode = null;
+                    continue;
+                }
+                if (itfMaxLength > 0 && len > itfMaxLength) {
+                    detectedBarcode = null;
+                    continue;
+                }
             }
             detected ++;
 

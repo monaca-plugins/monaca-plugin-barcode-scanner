@@ -112,6 +112,8 @@ NSString* timeoutPrompt;
 NSMutableArray* availableCodeTypes;
 BOOL enableTorch;
 BOOL isTorchOn;
+int itfMinLength;
+int itfMaxLength;
 
 UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
 
@@ -127,7 +129,9 @@ UIDeviceOrientation prevOrientation = UIDeviceOrientationUnknown;
     timeoutPrompt = [self timeoutPromptText:options];
     enableTorch = [self doesEnableTorch:options];
     isTorchOn = enableTorch && [self defaultTorchOn:options];
-    
+    itfMinLength = [self itfMinLengthValue:options];
+    itfMaxLength = [self itfMaxLengthValue:options];
+
     // Detection area customization parameters
     self.customAreaWidth = [self detectionAreaWidth:options];
     self.customAreaHeight = [self detectionAreaHeight:options];
@@ -549,6 +553,18 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
         // バーコードを検出
         NSString *barcodeDataStr = [(AVMetadataMachineReadableCodeObject *)data stringValue];
         if ([availableCodeTypes containsObject:data.type]) {
+            // ITF length filter
+            BOOL isITF = ([data.type isEqualToString:AVMetadataObjectTypeITF14Code] ||
+                          [data.type isEqualToString:AVMetadataObjectTypeInterleaved2of5Code]);
+            if (isITF) {
+                NSUInteger len = barcodeDataStr.length;
+                if (itfMinLength > 0 && len < itfMinLength) {
+                    continue;
+                }
+                if (itfMaxLength > 0 && len > itfMaxLength) {
+                    continue;
+                }
+            }
 
             self.detectedText = barcodeDataStr;
             self.detectedFormat = [BarcodeScannerViewController getBarcodeFormatString:data.type];
@@ -781,9 +797,9 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
 
 /// Get detection area height from options
 - (CGFloat)detectionAreaHeight:(NSDictionary*)options {
-    CGFloat defaultSize = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ? 
+    CGFloat defaultSize = (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) ?
         DETECTION_AREA_SIZE_IPAD_DEFAULT : DETECTION_AREA_SIZE_DEFAULT;
-        
+
     if ([options isEqual:[NSNull null]]) {
         return defaultSize;
     }
@@ -795,6 +811,30 @@ didOutputMetadataObjects:(NSArray *)metadataObjects
     } else {
         return defaultSize;
     }
+}
+
+/// Get ITF minimum length from options
+- (int)itfMinLengthValue:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return 0;
+    }
+    NSNumber* minLength = options[@"itfMinLength"];
+    if ([minLength isEqual:[NSNull null]] || ![self isNumber:minLength]) {
+        return 0;
+    }
+    return MAX(0, [minLength intValue]);
+}
+
+/// Get ITF maximum length from options
+- (int)itfMaxLengthValue:(NSDictionary*)options {
+    if ([options isEqual:[NSNull null]]) {
+        return 0;
+    }
+    NSNumber* maxLength = options[@"itfMaxLength"];
+    if ([maxLength isEqual:[NSNull null]] || ![self isNumber:maxLength]) {
+        return 0;
+    }
+    return MAX(0, [maxLength intValue]);
 }
 
 @end

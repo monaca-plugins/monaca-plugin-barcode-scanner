@@ -7,9 +7,11 @@ const BarcodeScanner = function () {};
 /**
  * Scan barcode with optional configuration
  * @param {function} success - Success callback function
- * @param {function} fail - Error callback function  
+ * @param {function} fail - Error callback function
  * @param {object} config - Optional configuration object
  * @param {object} config.detectionArea - Detection area configuration (width, height in density-independent units: Android=dp, iOS=pt)
+ * @param {number} config.itfMinLength - Minimum length for ITF barcode detection. ITF codes shorter than this value will be ignored. (default: 0 = no filter)
+ * @param {number} config.itfMaxLength - Maximum length for ITF barcode detection. ITF codes longer than this value will be ignored. (default: 0 = no filter)
  */
 BarcodeScanner.prototype.scan = function(success, fail, config) {
   cordova.exec(success, fail, "MonacaBarcodeScannerPlugin", "scan", [config]);
